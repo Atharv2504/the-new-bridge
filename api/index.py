@@ -10,7 +10,7 @@ from psycopg2 import IntegrityError
 
 # Load .env from project root
 env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-load_dotenv(env_path, override=True)
+load_dotenv(env_path, override=not os.environ.get('VERCEL'))
 print(f'Loaded .env from: {env_path}')
 print(f'DATABASE_URL configured: {bool(os.environ.get("DATABASE_URL"))}')
 print(f'DATABASE_SSLMODE: {os.environ.get("DATABASE_SSLMODE", "NOT SET")}')

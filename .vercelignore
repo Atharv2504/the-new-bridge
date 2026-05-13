@@ -1,0 +1,11 @@
+.env
+.env.*
+AWSCLIV2.msi
+__pycache__/
+api/__pycache__/
+*.log
+debug_*.txt
+debug_*.py
+login_response.txt
+out.txt
+test_*.py
