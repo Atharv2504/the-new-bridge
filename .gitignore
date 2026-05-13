@@ -40,3 +40,5 @@ test_*.py
 .env.local
 .env.example
 .env.production
+
+.vercel
