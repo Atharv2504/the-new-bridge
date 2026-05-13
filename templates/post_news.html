@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="color: var(--trust-blue);">Post Industry News</h2>
+        <p class="text-muted-custom">Share your insights and experiences with the community.</p>
+    </div>
+    <a href="{{ url_for('news') }}" class="btn btn-outline-primary">Back to News</a>
+</div>
+
+<div class="glass-card bg-white p-4 rounded shadow-sm border border-light">
+    <form action="{{ url_for('post_news') }}" method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label fw-bold">Article Title *</label>
+            <input type="text" class="form-control" id="title" name="title" required placeholder="Enter a compelling title">
+        </div>
+        
+        <div class="mb-3">
+            <label for="sector" class="form-label fw-bold">Sector *</label>
+            <select class="form-select" id="sector" name="sector" required>
+                <option value="" disabled selected>Select a sector</option>
+                {% for sector in sectors %}
+                    <option value="{{ sector }}">{{ sector }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label for="content" class="form-label fw-bold">Article Content *</label>
+            <textarea class="form-control" id="content" name="content" rows="6" required placeholder="Share the key details and insights..."></textarea>
+        </div>
+        
+        <div class="mb-4">
+            <label for="mentor_take" class="form-label fw-bold">Your Mentor Take *</label>
+            <textarea class="form-control" id="mentor_take" name="mentor_take" rows="3" required placeholder="What wisdom would you share about this topic?"></textarea>
+            <div class="form-text">This will be displayed as: "Your Name says: '[Your take]'"</div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom">Post Article</button>
+            <a href="{{ url_for('news') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

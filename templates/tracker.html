@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="mb-4">
+    <h2 style="color: var(--trust-blue);">{% if user.type == 'student' %}Growth Tracker{% else %}Mentor Dashboard{% endif %}</h2>
+    <p class="text-muted-custom">
+        {% if user.type == 'student' %}Monitor your self-improvement and session milestones.{% else %}Manage your availability and session requests.{% endif %}
+    </p>
+</div>
+
+{% if user.type == 'student' %}
+    <!-- Reverse Mentor Availability Toggle for Student -->
+    <div class="glass-card mb-4 p-4 rounded shadow-sm border border-light bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1 text-dark">Reverse Mentor Availability</h5>
+            <p class="text-muted-custom small mb-0">Turn on to show your profile to mentors so you can teach them new tech skills.</p>
+        </div>
+        <div>
+            <form action="{{ url_for('toggle_reverse_mentor_mode') }}" method="POST">
+                {% if user.reverse_mentor_mode %}
+                    <button type="submit" class="btn btn-info fw-bold px-4 rounded-pill">Reverse Mentor: ON</button>
+                {% else %}
+                    <button type="submit" class="btn btn-secondary fw-bold px-4 rounded-pill">Reverse Mentor: OFF</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="glass-card mb-4 bg-white p-4 rounded shadow-sm border border-light">
+        <h4 class="mb-3 text-dark">Session Participation</h4>
+        <div class="d-flex justify-content-between text-muted-custom small mb-1">
+            <span>Sessions Attended</span>
+            <span>{{ user.sessions_attended }} / 10 Target</span>
+        </div>
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar progress-bar-custom" role="progressbar" style="width: {{ (user.sessions_attended / 10) * 100 }}%;" aria-valuenow="{{ user.sessions_attended }}" aria-valuemin="0" aria-valuemax="10"></div>
+        </div>
+        <p class="text-muted-custom small"><i class="bi bi-info-circle me-1"></i> Complete 10 sessions to unlock the "Dedicated Learner" badge.</p>
+    </div>
+
+    <!-- Student Active Sessions -->
+    <div class="glass-card mb-4 bg-white p-4 rounded shadow-sm border border-light">
+        <h4 class="mb-4 text-dark">Active Sessions</h4>
+        {% set active_sessions = user.sessions | selectattr('status', 'in', ['pending', 'accepted']) | list %}
+        {% if active_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mentor</th>
+                            <th>Date & Time</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in active_sessions %}
+                        <tr>
+                            <td class="fw-bold">{{ s.retiree_name }}</td>
+                            <td>{{ s.date }} <br><small class="text-muted">{{ s.time }}</small></td>
+                            <td>{{ s.subject }}</td>
+                            <td>
+                                {% if s.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark mb-2 d-block">Pending</span>
+                                    {% if s.initiator_role == 'retiree' %}
+                                        <div class="d-flex flex-column gap-1">
+                                            <form action="{{ url_for('accept_session', session_id=s.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-sm btn-success w-100">Accept</button>
+                                            </form>
+                                            <form action="{{ url_for('deny_session', session_id=s.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Deny</button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <div class="small mt-1 text-muted">Waiting for Mentor Approval</div>
+                                    {% endif %}
+                                {% elif s.status == 'accepted' %}
+                                    <span class="badge bg-success mb-2">Accepted</span>
+                                    <a href="{{ url_for('meeting', session_id=s.id) }}" class="btn btn-sm btn-primary d-block mb-2">Join Session</a>
+                                    {% if s.key_takeaways %}
+                                        <button class="btn btn-sm btn-outline-info d-block w-100" onclick="alert('Playing Audio Recap via Amazon Polly...')"><i class="bi bi-play-circle-fill me-1"></i>Listen to Recap</button>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted-custom">You have no active sessions. Visit the Wisdom Market to book one!</p>
+        {% endif %}
+    </div>
+
+    <!-- Student Session History -->
+    <div class="glass-card mb-4 bg-white p-4 rounded shadow-sm border border-light">
+        <h4 class="mb-4 text-dark">Session History</h4>
+        {% set history_sessions = user.sessions | selectattr('status', 'in', ['completed', 'denied']) | list %}
+        {% if history_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mentor</th>
+                            <th>Date & Time</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in history_sessions %}
+                        <tr>
+                            <td class="fw-bold">{{ s.retiree_name }}</td>
+                            <td>{{ s.date }} <br><small class="text-muted">{{ s.time }}</small></td>
+                            <td>{{ s.subject }}</td>
+                            <td>
+                                {% if s.status == 'completed' %}
+                                    <span class="badge bg-secondary">Completed</span>
+                                {% elif s.status == 'denied' %}
+                                    <span class="badge bg-danger">Denied</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.status == 'completed' %}
+                                    <a href="{{ url_for('rate_session', session_id=s.id) }}" class="btn btn-sm btn-warning">Rate Mentor</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted-custom">No session history yet.</p>
+        {% endif %}
+    </div>
+
+{% else %}
+    <!-- Retiree Dashboard -->
+    <div class="glass-card mb-4 p-4 rounded shadow-sm border border-light bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1 text-dark">Mentor Availability</h5>
+            <p class="text-muted-custom small mb-0">Turn off to temporarily hide your profile from the Wisdom Market.</p>
+        </div>
+        <div>
+            <form action="{{ url_for('toggle_mentor_mode') }}" method="POST">
+                {% if user.mentor_mode %}
+                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-pill">Mentor Mode: ON</button>
+                {% else %}
+                    <button type="submit" class="btn btn-secondary fw-bold px-4 rounded-pill">Mentor Mode: OFF</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+
+
+    <div class="glass-card mb-4 bg-white p-4 rounded shadow-sm border border-warning border-opacity-50">
+        <h4 class="mb-4 text-warning"><i class="bi bi-clock-history me-2"></i>Pending Session Requests</h4>
+        {% if user.pending_sessions %}
+            <div class="row g-3">
+                {% for s in user.pending_sessions %}
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ s.student_name }}</h6>
+                                <div class="text-warning small mt-1">
+                                    <i class="bi bi-star-fill"></i> {{ "%.1f"|format(s.avg_rating) }} <span class="text-muted fw-normal">({{ s.review_count }} reviews)</span>
+                                </div>
+                            </div>
+                            <span class="badge bg-primary">{{ s.date }} @ {{ s.time }}</span>
+                        </div>
+                        <p class="small text-muted-custom mb-3"><strong>Topic:</strong> {{ s.subject }}</p>
+                        {% if s.initiator_role == 'student' %}
+                            <div class="d-flex gap-2">
+                                <form action="{{ url_for('accept_session', session_id=s.id) }}" method="POST" class="w-50">
+                                    <button type="submit" class="btn btn-sm btn-success w-100">Accept</button>
+                                </form>
+                                <form action="{{ url_for('deny_session', session_id=s.id) }}" method="POST" class="w-50">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">Deny</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="small mt-1 text-muted">Waiting for Student Approval</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted-custom">No pending requests at the moment.</p>
+        {% endif %}
+    </div>
+
+    <div class="glass-card bg-white p-4 rounded shadow-sm border border-success border-opacity-50">
+        <h4 class="mb-4 text-success"><i class="bi bi-calendar-check me-2"></i>Upcoming Accepted Sessions</h4>
+        {% if user.upcoming_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Date & Time</th>
+                            <th>Subject</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in user.upcoming_sessions %}
+                        <tr>
+                            <td class="fw-bold">{{ s.student_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ s.date }}</span> <span class="badge bg-light text-dark border">{{ s.time }}</span></td>
+                            <td>{{ s.subject }}</td>
+                            <td>
+                                <a href="{{ url_for('meeting', session_id=s.id) }}" class="btn btn-sm btn-primary-custom"><i class="bi bi-camera-video me-1"></i> Join Call</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted-custom">You have no upcoming sessions scheduled.</p>
+        {% endif %}
+    </div>
+
+    <div class="glass-card bg-white p-4 rounded shadow-sm border border-secondary border-opacity-50">
+        <h4 class="mb-4 text-secondary"><i class="bi bi-clock-history me-2"></i>Completed Sessions</h4>
+        {% if user.completed_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Date & Time</th>
+                            <th>Subject</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in user.completed_sessions %}
+                        <tr>
+                            <td class="fw-bold">{{ s.student_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ s.date }}</span> <span class="badge bg-light text-dark border">{{ s.time }}</span></td>
+                            <td>{{ s.subject }}</td>
+                            <td>
+                                <a href="{{ url_for('rate_session', session_id=s.id) }}" class="btn btn-sm btn-warning"><i class="bi bi-star me-1"></i>Rate Student</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted-custom">No completed sessions yet.</p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

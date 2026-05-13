@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="landing-hero text-center rounded mb-5 border-0 shadow-sm">
+    <div class="container py-4">
+        <span class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill fw-medium border border-primary border-opacity-25">Professional Mentorship Network</span>
+        <h1 class="display-3 fw-bold mb-4" style="color: var(--trust-blue); letter-spacing: -1px;">BridgeTheGap</h1>
+        <p class="lead text-muted-custom mb-5 mx-auto" style="max-width: 700px; font-weight: 300;">
+            A Human Library connecting the wisdom of retired professionals with the ambition of the next generation.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg shadow-sm rounded-pill px-5">Join as a Student</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-custom btn-lg shadow-sm rounded-pill px-5">Join as a Mentor</a>
+        </div>
+    </div>
+</div>
+
+<!-- Section: Features -->
+<div id="features" class="landing-section bg-white p-5 rounded border shadow-sm mb-5">
+    <div class="text-center mb-5">
+        <h2 style="color: var(--trust-blue); font-weight: 700;">Platform Features</h2>
+        <p class="text-muted-custom">Everything you need to grow professionally, built directly into the platform.</p>
+    </div>
+    <div class="row g-4 text-center">
+        <div class="col-md-3">
+            <div class="p-3">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-badge-fill fs-2"></i>
+                </div>
+                <h5 class="fw-bold">Identity Hub</h5>
+                <p class="text-muted-custom small">Your secure profile showcasing verified credentials and immutable achievements.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3">
+                <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-graph-up-arrow fs-2"></i>
+                </div>
+                <h5 class="fw-bold">Growth Tracker</h5>
+                <p class="text-muted-custom small">Monitor session milestones, skill badges, and visually track self-improvement.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3">
+                <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-newspaper fs-2"></i>
+                </div>
+                <h5 class="fw-bold">Industry Pulse</h5>
+                <p class="text-muted-custom small">A live feed of professional news annotated with real-world 'Mentor Takes'.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3">
+                <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-calendar2-check-fill fs-2"></i>
+                </div>
+                <h5 class="fw-bold">Wisdom Market</h5>
+                <p class="text-muted-custom small">Filter by sector and book focused 20-minute 1-on-1 sessions securely.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section: The Challenge -->
+<div id="challenge" class="row align-items-center mb-5 landing-section">
+    <div class="col-md-6 order-md-2 mb-4 mb-md-0 text-center">
+        <i class="bi bi-puzzle text-muted opacity-50" style="font-size: 8rem;"></i>
+    </div>
+    <div class="col-md-6 order-md-1">
+        <h2 class="mb-4" style="color: var(--trust-blue); font-weight: 700;">The Challenge</h2>
+        <p class="text-muted-custom fs-5 fw-light">
+            We face a dual crisis: the social isolation of seniors who hold a lifetime of invaluable industry knowledge, and the "experience gap" faced by youth entering an increasingly competitive workforce.
+        </p>
+        <p class="text-muted-custom fs-5 fw-light">
+            Traditional mentorship is often inaccessible, expensive, or lacks rigorous verification, leaving vast amounts of human capital untapped.
+        </p>
+    </div>
+</div>
+
+<!-- Section: Our Mission -->
+<div id="solution" class="row align-items-center mb-5 landing-section bg-light p-5 rounded border shadow-sm">
+    <div class="col-md-6 mb-4 mb-md-0 text-center">
+        <i class="bi bi-shield-check text-success opacity-75" style="font-size: 8rem;"></i>
+    </div>
+    <div class="col-md-6">
+        <h2 class="mb-4" style="color: var(--trust-blue); font-weight: 700;">Trust Infrastructure</h2>
+        <p class="text-muted-custom fs-5 fw-light">
+            BridgeTheGap operates on an evidence-based Trust Infrastructure. Our <strong>Verification Vault</strong> ensures that every mentor is exactly who they claim to be.
+        </p>
+        <ul class="list-unstyled text-muted-custom mt-4 fs-5 fw-light">
+            <li class="mb-3 d-flex"><i class="bi bi-check-circle-fill text-success me-3 mt-1"></i><span><strong>Immutable Documents:</strong> Certificates are uploaded securely to Amazon S3.</span></li>
+            <li class="mb-3 d-flex"><i class="bi bi-check-circle-fill text-success me-3 mt-1"></i><span><strong>AI Verification:</strong> Amazon Rekognition cross-references IDs automatically.</span></li>
+            <li class="mb-3 d-flex"><i class="bi bi-check-circle-fill text-success me-3 mt-1"></i><span><strong>1-on-1 Sessions:</strong> 20-minute focused mentoring calls via AWS Chime.</span></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

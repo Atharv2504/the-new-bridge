@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+{# 1:1 video: PeerJS is a stand-in for Amazon Chime SDK (free browser WebRTC). #}
+<!-- PeerJS — dev substitute for Amazon Chime SDK (not AWS-hosted) -->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<div class="row h-100">
+    <!-- Main Meeting Area -->
+    <div class="col-md-8 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0 text-dark"><i class="bi bi-camera-video text-primary me-2"></i>Live Session</h4>
+            <div class="d-flex align-items-center">
+                <span id="connection-status" class="badge bg-warning text-dark me-2">Connecting...</span>
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-record-circle me-1"></i>00:15:23</span>
+            </div>
+        </div>
+        
+        <!-- Video & Whiteboard Container -->
+        <div class="position-relative bg-dark rounded shadow-sm overflow-hidden d-flex align-items-center justify-content-center flex-grow-1" style="min-height: 500px; border: 2px solid var(--trust-blue);">
+            
+            <!-- Remote Video Feed -->
+            <video id="remote-video" class="position-absolute top-0 start-0 w-100 h-100 z-0" style="object-fit: cover;" autoplay playsinline></video>
+            
+            <!-- Local Video Feed (Picture-in-Picture style) -->
+            <div class="position-absolute bottom-0 end-0 m-3 z-2 rounded overflow-hidden shadow" style="width: 150px; height: 100px; border: 2px solid white; background: #000;">
+                <video id="local-video" class="w-100 h-100" style="object-fit: cover;" autoplay playsinline muted></video>
+            </div>
+            
+            <!-- Sync Whiteboard Canvas -->
+            <canvas id="whiteboard" class="position-absolute top-0 start-0 w-100 h-100 z-1" style="cursor: crosshair; display: none;"></canvas>
+            
+            <!-- Translation CC Overlay -->
+            <div id="cc-overlay" class="position-absolute bottom-0 start-50 translate-middle-x mb-4 bg-black bg-opacity-75 text-white px-4 py-2 rounded text-center z-2 w-75" style="display: none; font-size: 1.1rem; border: 1px solid rgba(255,255,255,0.2);">
+                <i class="bi bi-translate text-warning me-2"></i><span id="cc-text">Listening...</span>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="d-flex justify-content-between align-items-center mt-3 bg-light p-2 rounded border">
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-sm btn-outline-dark" id="btn-toggle-video" onclick="toggleVideo()"><i class="bi bi-camera-video me-1"></i>Video</button>
+                <button class="btn btn-sm btn-outline-dark" id="btn-toggle-audio" onclick="toggleAudio()"><i class="bi bi-mic me-1"></i>Mic</button>
+                <button class="btn btn-sm btn-outline-primary ms-3" id="btn-whiteboard" onclick="toggleWhiteboard()"><i class="bi bi-easel me-1"></i>Whiteboard</button>
+                <input type="color" id="pen-color" value="#0366d6" class="form-control form-control-color form-control-sm" title="Choose color" style="display: none;">
+                <button class="btn btn-sm btn-outline-secondary" id="btn-clear-canvas" onclick="clearCanvas()" style="display: none;"><i class="bi bi-trash me-1"></i>Clear</button>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" id="btn-cc" onclick="toggleCC()"><i class="bi bi-badge-cc me-1"></i>Live Captions</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Controls -->
+    <div class="col-md-4 d-flex flex-column border-start ps-4">
+        
+        <!-- Session Info -->
+        <div class="mb-4">
+            <h6 class="fw-bold text-dark border-bottom pb-2">Session Details</h6>
+            <p class="small text-muted-custom mb-1"><strong>Topic:</strong> {{ session_data.subject }}</p>
+            <p class="small text-muted-custom mb-0"><strong>Role:</strong> {{ user_role | capitalize }}</p>
+            <p class="small text-muted-custom mb-0"><strong>Participant:</strong> {% if user_role == 'student' %}{{ session_data.mentor_name }}{% else %}{{ session_data.student_name }}{% endif %}</p>
+        </div>
+        
+        <!-- The "Voice of Experience" (AI Summary) -->
+        <div class="mb-4">
+            <h6 class="fw-bold text-dark border-bottom pb-2"><i class="bi bi-robot text-primary me-2"></i>Voice of Experience</h6>
+            <p class="small text-muted-custom mb-3">Generate an AI summary of this session's transcript via AWS Bedrock.</p>
+            <button id="btn-summary" class="btn btn-sm btn-primary-custom w-100 rounded-pill fw-bold" onclick="generateSummary({{ session_data.id }})">Generate AI Summary</button>
+            <div id="summary-result" class="mt-3 small p-3 bg-light border border-primary border-opacity-25 rounded" style="display: none;"></div>
+        </div>
+        
+        <!-- The "Homework" Handshake (Retiree Only) -->
+        {% if user_role == 'retiree' %}
+        <div class="mb-4 flex-grow-1 d-flex flex-column">
+            <h6 class="fw-bold text-dark border-bottom pb-2"><i class="bi bi-list-check text-success me-2"></i>Session Action Items</h6>
+            <p class="small text-muted-custom mb-2">Assign homework or reading tasks for the student.</p>
+            <textarea id="homework-input" class="form-control mb-2 flex-grow-1" placeholder="1. Read chapter 4\n2. Try building a prototype..."></textarea>
+            <button class="btn btn-sm btn-outline-success w-100 fw-bold" onclick="saveHomework({{ session_data.id }})">Save Action Items</button>
+        </div>
+        {% else %}
+        <div class="mb-4 flex-grow-1">
+            <div class="alert alert-info py-2 small">
+                <i class="bi bi-info-circle me-1"></i> Waiting for mentor to assign action items...
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- End Session Button -->
+        <div class="mt-auto pt-3 border-top">
+            <a href="{{ url_for('rate_session', session_id=session_data.id) }}" class="btn btn-danger w-100 fw-bold rounded-pill shadow-sm"><i class="bi bi-telephone-x me-2"></i>End Session</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ----------------------------------------
+    // WebRTC (PeerJS) Logic
+    // ----------------------------------------
+    const sessionId = "{{ session_data.id }}";
+    const userRole = "{{ user_role }}";
+    
+    // Create unique IDs based on session
+    const mentorPeerId = `bridgethegap-mentor-${sessionId}`;
+    const studentPeerId = `bridgethegap-student-${sessionId}`;
+    const myPeerId = userRole === 'retiree' ? mentorPeerId : studentPeerId;
+    const targetPeerId = userRole === 'retiree' ? studentPeerId : mentorPeerId;
+
+    const peer = new Peer(myPeerId);
+    let localStream = null;
+    let currentCall = null;
+    let streamReadyOrFailed = false;
+    
+    const localVideo = document.getElementById('local-video');
+    const remoteVideo = document.getElementById('remote-video');
+    const statusBadge = document.getElementById('connection-status');
+
+    // Get camera/mic
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+            localStream = stream;
+            localVideo.srcObject = stream;
+            streamReadyOrFailed = true;
+        })
+        .catch(err => {
+            console.error("Failed to get local stream. It may be in use by another browser.", err);
+            // We still proceed so the peer connection can happen and we can view the other person
+            streamReadyOrFailed = true;
+        });
+
+    peer.on('open', (id) => {
+        console.log('My peer ID is: ' + id);
+        setTimeout(initiateCall, 2000);
+    });
+
+    peer.on('call', (call) => {
+        console.log('Receiving call...');
+        if (localStream) {
+            call.answer(localStream);
+        } else {
+            call.answer(); // Answer without stream
+        }
+        handleCall(call);
+    });
+
+    function initiateCall() {
+        if (!streamReadyOrFailed) {
+            setTimeout(initiateCall, 1000);
+            return;
+        }
+        console.log('Calling target: ' + targetPeerId);
+        const call = localStream ? peer.call(targetPeerId, localStream) : peer.call(targetPeerId);
+        if (call) {
+            handleCall(call);
+        }
+    }
+
+    function handleCall(call) {
+        currentCall = call;
+        statusBadge.textContent = "Connected";
+        statusBadge.classList.replace('bg-warning', 'bg-success');
+        statusBadge.classList.replace('text-dark', 'text-white');
+        
+        call.on('stream', (remoteStream) => {
+            remoteVideo.srcObject = remoteStream;
+        });
+        
+        call.on('close', () => {
+            statusBadge.textContent = "Disconnected";
+            statusBadge.classList.replace('bg-success', 'bg-danger');
+            remoteVideo.srcObject = null;
+        });
+    }
+
+    // Toggles
+    function toggleVideo() {
+        if (!localStream) {
+            alert("Camera is not available or is being used by another application.");
+            return;
+        }
+        const track = localStream.getVideoTracks()[0];
+        if (track) {
+            track.enabled = !track.enabled;
+            const btn = document.getElementById('btn-toggle-video');
+            btn.innerHTML = track.enabled ? '<i class="bi bi-camera-video me-1"></i>Video' : '<i class="bi bi-camera-video-off text-danger me-1"></i>Video';
+        }
+    }
+
+    function toggleAudio() {
+        if (!localStream) {
+            alert("Microphone is not available.");
+            return;
+        }
+        const track = localStream.getAudioTracks()[0];
+        if (track) {
+            track.enabled = !track.enabled;
+            const btn = document.getElementById('btn-toggle-audio');
+            btn.innerHTML = track.enabled ? '<i class="bi bi-mic me-1"></i>Mic' : '<i class="bi bi-mic-mute text-danger me-1"></i>Mic';
+        }
+    }
+
+    // ----------------------------------------
+    // Feature 3: Interactive Sync Whiteboard
+    // ----------------------------------------
+    const canvas = document.getElementById('whiteboard');
+    const ctx = canvas.getContext('2d');
+    let whiteboardActive = false;
+    
+    function toggleWhiteboard() {
+        whiteboardActive = !whiteboardActive;
+        const btn = document.getElementById('btn-whiteboard');
+        const colorPicker = document.getElementById('pen-color');
+        const clearBtn = document.getElementById('btn-clear-canvas');
+        
+        if (whiteboardActive) {
+            canvas.style.display = 'block';
+            btn.classList.replace('btn-outline-primary', 'btn-primary');
+            colorPicker.style.display = 'inline-block';
+            clearBtn.style.display = 'inline-block';
+            resizeCanvas();
+        } else {
+            canvas.style.display = 'none';
+            btn.classList.replace('btn-primary', 'btn-outline-primary');
+            colorPicker.style.display = 'none';
+            clearBtn.style.display = 'none';
+        }
+    }
+
+    function resizeCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    let isDrawing = false;
+    let dataConn = null;
+    
+    peer.on('connection', (conn) => {
+        dataConn = conn;
+        setupDataConn();
+    });
+    
+    setTimeout(() => {
+        if (!dataConn) {
+            dataConn = peer.connect(targetPeerId);
+            setupDataConn();
+        }
+    }, 3000);
+
+    function setupDataConn() {
+        if (!dataConn) return;
+        dataConn.on('data', (data) => {
+            if (data.type === 'draw') {
+                ctx.strokeStyle = data.color;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                if (data.action === 'start') {
+                    ctx.beginPath();
+                    ctx.moveTo(data.x, data.y);
+                } else if (data.action === 'move') {
+                    ctx.lineTo(data.x, data.y);
+                    ctx.stroke();
+                }
+            } else if (data.type === 'clear') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
+    }
+
+    function sendData(data) {
+        if (dataConn && dataConn.open) {
+            dataConn.send(data);
+        }
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        ctx.beginPath();
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        ctx.moveTo(x, y);
+        sendData({ type: 'draw', action: 'start', x, y, color: document.getElementById('pen-color').value });
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const color = document.getElementById('pen-color').value;
+        
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        sendData({ type: 'draw', action: 'move', x, y, color });
+    });
+
+    canvas.addEventListener('mouseup', () => { isDrawing = false; });
+    canvas.addEventListener('mouseout', () => { isDrawing = false; });
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        sendData({ type: 'clear' });
+    }
+
+    // ----------------------------------------
+    // Feature 7: Live Translation & Real Transcripts
+    // ----------------------------------------
+    const ccOverlay = document.getElementById('cc-overlay');
+    const ccText = document.getElementById('cc-text');
+    let ccActive = false;
+    let accumulatedTranscript = "Session started. ";
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let micAvailable = true;
+    
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = function(event) {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    accumulatedTranscript += event.results[i][0].transcript + " ";
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            if (ccActive) {
+                ccText.textContent = interimTranscript || "Listening...";
+            }
+        };
+        
+        recognition.onerror = function(event) {
+            console.log("Speech recognition error:", event.error);
+            micAvailable = false;
+        };
+
+        try {
+            recognition.start();
+        } catch (e) {
+            micAvailable = false;
+        }
+        
+        recognition.onend = function() {
+            if (micAvailable) {
+                try { recognition.start(); } catch(e) {}
+            }
+        };
+    } else {
+        micAvailable = false;
+    }
+
+    let ccInterval;
+    const sessionSubject = "{{ session_data.subject }}";
+    const dummyTranslations = [
+        `So regarding ${sessionSubject}, the fundamentals are key.`,
+        "We should consider how this applies to real-world scenarios.",
+        "That's a very insightful point about the industry.",
+        `I suggest you focus on mastering the basics of ${sessionSubject}.`,
+        "Let's assign some specific action items to practice this."
+    ];
+    
+    function simulateCC() {
+        let i = 0;
+        clearInterval(ccInterval);
+        ccInterval = setInterval(() => {
+            if (ccActive) {
+                ccText.textContent = dummyTranslations[i % dummyTranslations.length];
+                accumulatedTranscript += dummyTranslations[i % dummyTranslations.length] + " ";
+                i++;
+            }
+        }, 4000);
+    }
+
+    function toggleCC() {
+        ccActive = !ccActive;
+        const btn = document.getElementById('btn-cc');
+        if (ccActive) {
+            btn.classList.replace('btn-outline-primary', 'btn-primary');
+            ccOverlay.style.display = 'block';
+            ccText.textContent = "Listening...";
+            
+            // Fallback for demo if mic is locked by another browser or unsupported
+            if (!micAvailable || !localStream) {
+                simulateCC();
+            }
+        } else {
+            btn.classList.replace('btn-primary', 'btn-outline-primary');
+            ccOverlay.style.display = 'none';
+            clearInterval(ccInterval);
+        }
+    }
+
+    // ----------------------------------------
+    // Feature 1: AI Summary (AWS Bedrock)
+    // ----------------------------------------
+    function generateSummary(sessionId) {
+        const btn = document.getElementById('btn-summary');
+        const res = document.getElementById('summary-result');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing...';
+        
+        fetch(`/api/generate_summary/${sessionId}`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: accumulatedTranscript })
+        })
+            .then(r => r.json())
+            .then(data => {
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Summary Generated';
+                btn.classList.replace('btn-primary-custom', 'btn-success');
+                res.innerHTML = data.summary ? data.summary.replace(/\n/g, '<br>') : "Summary completed.";
+                res.style.display = 'block';
+            })
+            .catch(err => {
+                console.error(err);
+                btn.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Error';
+                btn.classList.replace('btn-primary-custom', 'btn-danger');
+                res.innerHTML = "Failed to generate summary. The server may have returned an error.";
+                res.style.display = 'block';
+                btn.disabled = false;
+            });
+    }
+
+    // ----------------------------------------
+    // Homework Handshake
+    // ----------------------------------------
+    function saveHomework(sessionId) {
+        const hw = document.getElementById('homework-input').value;
+        fetch(`/api/save_homework/${sessionId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({homework: hw})
+        }).then(r => r.json()).then(data => {
+            alert("Action Items saved! The student will see them in their tracker.");
+        });
+    }
+</script>
+{% endblock %}

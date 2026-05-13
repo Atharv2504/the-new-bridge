@@ -1,0 +1,42 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Local debug/test artifacts
+AWSCLIV2.msi
+debug_*.txt
+debug_*.py
+login_response.txt
+out.txt
+test_*.py
+
+# Environment variables
+.env
+.env.local
+.env.example
+.env.production

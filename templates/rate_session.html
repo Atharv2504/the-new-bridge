@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="glass-card p-5 text-center bg-white border shadow-sm rounded">
+            <h2 class="mb-3" style="color: var(--trust-blue);"><i class="bi bi-star-fill text-warning me-2"></i>Mutual Accountability</h2>
+            <p class="text-muted-custom mb-4">
+                {% if user_role == 'student' %}
+                    How would you rate <strong>{{ session_data.mentor_name }}</strong>'s clarity and impact during the session?
+                {% else %}
+                    How would you rate <strong>{{ session_data.student_name }}</strong>'s punctuality and curiosity?
+                {% endif %}
+            </p>
+            
+            <form action="{{ url_for('rate_session', session_id=session_data.id) }}" method="POST">
+                <input type="hidden" name="rating" id="rating-value" value="0">
+                
+                <!-- 5-Star Interactive UI -->
+                <div class="mb-4 d-flex justify-content-center gap-2" id="star-container" style="font-size: 3rem; color: #dee2e6; cursor: pointer;">
+                    <i class="bi bi-star" data-value="1"></i>
+                    <i class="bi bi-star" data-value="2"></i>
+                    <i class="bi bi-star" data-value="3"></i>
+                    <i class="bi bi-star" data-value="4"></i>
+                    <i class="bi bi-star" data-value="5"></i>
+                </div>
+                
+                <button type="submit" id="submit-btn" class="btn btn-primary-custom w-100 rounded-pill fw-bold" disabled>Submit Rating</button>
+            </form>
+            
+            <div class="mt-4 pt-3 border-top">
+                <p class="small text-muted-custom fst-italic">"We ensure that the time of our veterans and the dreams of our students are both treated with the highest respect."</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const stars = document.querySelectorAll('#star-container .bi');
+    const ratingValue = document.getElementById('rating-value');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    let currentRating = 0;
+
+    stars.forEach(star => {
+        // Hover effect
+        star.addEventListener('mouseover', function() {
+            const val = this.getAttribute('data-value');
+            highlightStars(val);
+        });
+
+        // Click to set
+        star.addEventListener('click', function() {
+            currentRating = this.getAttribute('data-value');
+            ratingValue.value = currentRating;
+            submitBtn.disabled = false;
+        });
+    });
+
+    // Reset on mouseout if not clicked
+    document.getElementById('star-container').addEventListener('mouseout', function() {
+        highlightStars(currentRating);
+    });
+
+    function highlightStars(val) {
+        stars.forEach(s => {
+            if (s.getAttribute('data-value') <= val) {
+                s.classList.replace('bi-star', 'bi-star-fill');
+                s.style.color = '#ffc107'; // Bootstrap warning color
+            } else {
+                s.classList.replace('bi-star-fill', 'bi-star');
+                s.style.color = '#dee2e6'; // Bootstrap gray-200
+            }
+        });
+    }
+</script>
+{% endblock %}

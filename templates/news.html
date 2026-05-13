@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 style="color: var(--trust-blue);">Industry Pulse</h2>
+        <p class="text-muted-custom mb-0">Professional news with real-world 'Mentor Takes'.</p>
+    </div>
+    
+    <div class="d-flex gap-2 flex-wrap justify-content-end align-items-center">
+        {% if user_role == 'retiree' %}
+            <a href="{{ url_for('post_news') }}" class="btn btn-success rounded-pill fw-bold px-3">
+                <i class="bi bi-plus-circle me-2"></i>Post News
+            </a>
+        {% endif %}
+        
+        <a href="{{ url_for('news') }}" class="btn btn-sm rounded-pill {% if not current_filter %}btn-primary-custom{% else %}btn-outline-primary{% endif %} fw-bold px-3">All Sectors</a>
+        {% for sector in sectors %}
+            <a href="{{ url_for('news', sector=sector) }}" class="btn btn-sm rounded-pill {% if current_filter == sector %}btn-primary-custom{% else %}btn-outline-primary{% endif %} fw-bold px-3">{{ sector }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for article in articles %}
+        <div class="col-12">
+            <div class="glass-card bg-white border shadow-sm rounded p-4 h-100 position-relative">
+                <span class="position-absolute top-0 end-0 mt-3 me-3 badge bg-light text-primary border border-primary border-opacity-25">{{ article.sector }}</span>
+                <h4 class="mb-3 text-dark pe-5">{{ article.title }}</h4>
+                <p class="text-muted-custom fs-5">{{ article.content }}</p>
+                
+                <div class="mt-4 p-3 rounded" style="background: rgba(3, 102, 214, 0.05); border-left: 4px solid var(--trust-blue);">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-chat-quote-fill text-primary me-2 fs-5"></i>
+                        <strong class="text-dark">Mentor's Take</strong>
+                    </div>
+                    <p class="mb-0 text-muted-custom font-italic">"{{ article.mentor_take }}"</p>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted-custom fs-5">No news available in this sector right now.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

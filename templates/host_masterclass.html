@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="color: var(--trust-blue);">Host a Masterclass</h2>
+        <p class="text-muted-custom">Share your expertise with multiple students in an exclusive webinar.</p>
+    </div>
+    <a href="{{ url_for('masterclass') }}" class="btn btn-outline-primary">Back to Masterclasses</a>
+</div>
+
+<div class="glass-card bg-white p-4 rounded shadow-sm border border-light">
+    <form action="{{ url_for('host_masterclass') }}" method="POST">
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label for="title" class="form-label fw-bold">Masterclass Title *</label>
+                <input type="text" class="form-control" id="title" name="title" required placeholder="e.g., Navigating the AI Era in Finance">
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <label for="max_students" class="form-label fw-bold">Max Students *</label>
+                <input type="number" class="form-control" id="max_students" name="max_students" required min="1" max="100" placeholder="50">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="date" class="form-label fw-bold">Date *</label>
+                <input type="date" class="form-control" id="date" name="date" required min="{{ current_date }}">
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label for="time" class="form-label fw-bold">Time *</label>
+                <input type="time" class="form-control" id="time" name="time" required>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label for="description" class="form-label fw-bold">Description *</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Describe what participants will learn..."></textarea>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom">Schedule Masterclass</button>
+            <a href="{{ url_for('masterclass') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

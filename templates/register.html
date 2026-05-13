@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="glass-card mt-5 p-5">
+            <h2 class="text-center mb-4" style="color: var(--trust-blue);">Create an Account</h2>
+            <form action="{{ url_for('register') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label text-muted-custom">I am joining as a:</label>
+                    <select name="role" class="form-select" required>
+                        <option value="" disabled selected>Select your role...</option>
+                        <option value="student">Student (Looking for Mentorship)</option>
+                        <option value="retiree">Retiree (Offering Mentorship)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted-custom">Full Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted-custom">Email address</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-4 p-3 bg-light rounded border">
+                    <label class="form-label text-dark fw-bold mb-3"><i class="bi bi-person-lines-fill me-2"></i>Wisdom Match Quiz (Learning Style)</label>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted-custom">1. How do you prefer to learn?</label>
+                        <select name="q1" class="form-select form-select-sm" required>
+                            <option value="Visual">Visual (Diagrams, Videos)</option>
+                            <option value="Auditory">Auditory (Listening, Discussing)</option>
+                            <option value="Reading">Reading/Writing</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted-custom">2. What environment suits you best?</label>
+                        <select name="q2" class="form-select form-select-sm" required>
+                            <option value="Structured">Highly Structured (Step-by-step)</option>
+                            <option value="Flexible">Flexible (Exploratory)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted-custom">3. Focus of discussion?</label>
+                        <select name="q3" class="form-select form-select-sm" required>
+                            <option value="Theory">Deep Theory & Concepts</option>
+                            <option value="Practical">Practical Real-World Application</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted-custom">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary-custom w-100 mb-3">Register</button>
+            </form>
+            <div class="text-center">
+                <small class="text-muted-custom">Already have an account? <a href="{{ url_for('login') }}" style="color: var(--trust-blue);">Log In</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

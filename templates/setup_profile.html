@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="glass-card mt-4 p-5 border-0 shadow">
+            <div class="text-center mb-5">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-shield-lock-fill fs-3"></i>
+                </div>
+                <h2 style="color: var(--trust-blue); font-weight: 700;">Verification Vault</h2>
+                <p class="text-muted-custom">Add your educational history and upload your certificates.</p>
+            </div>
+            
+            <form action="{{ url_for('setup_profile') }}" method="POST" enctype="multipart/form-data">
+                
+                <h5 class="fw-bold mb-3 mt-4 text-dark">Basic Information</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted-custom small fw-bold">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" placeholder="+1 (555) 000-0000">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted-custom small fw-bold">Profile Photo</label>
+                        <input type="file" name="profile_photo" class="form-control" accept="image/*">
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-3 mt-4 text-success"><i class="bi bi-person-badge me-2"></i>Identity Verification (Immutable)</h5>
+                <div class="mb-4 p-4 bg-light border rounded">
+                    <label class="form-label fw-bold small">Government Issued ID (Passport/License) <span class="text-danger">*</span></label>
+                    <input type="file" name="govt_id" class="form-control" accept="image/*,.pdf" required>
+                </div>
+
+                {% if role == 'student' %}
+                    <h5 class="fw-bold mb-3 mt-4 text-dark">Student Profile</h5>
+                    <div class="mb-4">
+                        <label class="form-label text-muted-custom small fw-bold">Learning Goals (One per line)</label>
+                        <textarea name="learning_goals" class="form-control" rows="4" placeholder="Understand AI Ethics&#10;Learn cloud architecture&#10;Improve public speaking" required></textarea>
+                    </div>
+                {% else %}
+                    <h5 class="fw-bold mb-3 mt-4 text-dark">Retiree Profile</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted-custom small fw-bold">Industry Sector <span class="text-danger">*</span></label>
+                            <select name="sector" class="form-select" required>
+                                <option value="" disabled selected>Select sector...</option>
+                                {% for sec in sectors %}
+                                    <option value="{{ sec }}">{{ sec }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted-custom small fw-bold">Education Outline</label>
+                            <input type="text" name="education" class="form-control" placeholder="e.g., MD, Harvard" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted-custom small fw-bold">Legacy Bio</label>
+                        <textarea name="legacy_bio" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted-custom small fw-bold">Key Achievements (One per line)</label>
+                        <textarea name="achievements" class="form-control" rows="3" required></textarea>
+                    </div>
+                {% endif %}
+
+                <!-- Dynamic Educational Credentials -->
+                <div class="mt-4 p-4 border rounded" style="background: rgba(3, 102, 214, 0.02); border-color: rgba(3, 102, 214, 0.2) !important;">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-mortarboard-fill me-2"></i>Educational History (Immutable)</h6>
+                    <p class="small text-muted-custom mb-4">Add your degrees and upload the corresponding certificates to receive Verification Badges on your profile.</p>
+                    
+                    <div id="education-container">
+                        <!-- Pre-populated mandatory 10th block -->
+                        <div class="education-block border p-3 mb-3 rounded bg-white position-relative shadow-sm">
+                            <div class="row">
+                                <div class="col-md-5 mb-2">
+                                    <label class="form-label small fw-bold">Level of Degree <span class="text-danger">*</span></label>
+                                    <select name="edu_level" class="form-select form-select-sm" required>
+                                        <option value="10th" selected>10th Standard</option>
+                                        <option value="12th">12th Standard</option>
+                                        <option value="Bachelor's">Bachelor's Degree</option>
+                                        <option value="Master's">Master's Degree</option>
+                                        <option value="PhD">PhD</option>
+                                        <option value="Certification">Certification</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-7 mb-2">
+                                    <label class="form-label small fw-bold">School/University Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="e.g., St. Jude High School" required>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="form-label small fw-bold">Upload Certificate Photo/PDF <span class="text-danger">*</span></label>
+                                    <input type="file" name="edu_certificate" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if role == 'retiree' %}
+                        <!-- Pre-populated mandatory 12th and Degree for retirees -->
+                        <div class="education-block border p-3 mb-3 rounded bg-white position-relative shadow-sm">
+                            <div class="row">
+                                <div class="col-md-5 mb-2">
+                                    <label class="form-label small fw-bold">Level of Degree <span class="text-danger">*</span></label>
+                                    <select name="edu_level" class="form-select form-select-sm" required>
+                                        <option value="10th">10th Standard</option>
+                                        <option value="12th" selected>12th Standard</option>
+                                        <option value="Bachelor's">Bachelor's Degree</option>
+                                        <option value="Master's">Master's Degree</option>
+                                        <option value="PhD">PhD</option>
+                                        <option value="Certification">Certification</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-7 mb-2">
+                                    <label class="form-label small fw-bold">School/University Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="Institution Name" required>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="form-label small fw-bold">Upload Certificate Photo/PDF <span class="text-danger">*</span></label>
+                                    <input type="file" name="edu_certificate" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="education-block border p-3 mb-3 rounded bg-white position-relative shadow-sm">
+                            <div class="row">
+                                <div class="col-md-5 mb-2">
+                                    <label class="form-label small fw-bold">Level of Degree <span class="text-danger">*</span></label>
+                                    <select name="edu_level" class="form-select form-select-sm" required>
+                                        <option value="10th">10th Standard</option>
+                                        <option value="12th">12th Standard</option>
+                                        <option value="Bachelor's" selected>Bachelor's Degree</option>
+                                        <option value="Master's">Master's Degree</option>
+                                        <option value="PhD">PhD</option>
+                                        <option value="Certification">Certification</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-7 mb-2">
+                                    <label class="form-label small fw-bold">School/University Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="Institution Name" required>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="form-label small fw-bold">Upload Certificate Photo/PDF <span class="text-danger">*</span></label>
+                                    <input type="file" name="edu_certificate" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold px-3 rounded-pill" onclick="addEducation()">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Add Education
+                    </button>
+
+                    {% if role == 'retiree' %}
+                    <div class="mb-2 border-top pt-4 mt-4">
+                        <label class="form-label small fw-bold text-dark">Proof of Work Experience (Service Letter) <span class="text-danger">*</span></label>
+                        <input type="file" name="work_exp_cert" class="form-control" required>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom btn-lg w-100 mt-5 shadow-sm rounded-pill"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Save & Enter Vault</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function addEducation() {
+    const container = document.getElementById('education-container');
+    const template = `
+        <div class="education-block border border-primary border-opacity-25 p-3 mb-3 rounded bg-white position-relative shadow-sm" style="animation: fadeIn 0.3s ease;">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close" onclick="this.parentElement.remove()"></button>
+            <div class="row">
+                <div class="col-md-5 mb-2 mt-2">
+                    <label class="form-label small fw-bold">Level of Degree <span class="text-danger">*</span></label>
+                    <select name="edu_level" class="form-select form-select-sm" required>
+                        <option value="" disabled selected>Select level...</option>
+                        <option value="10th">10th Standard</option>
+                        <option value="12th">12th Standard</option>
+                        <option value="Bachelor's">Bachelor's Degree</option>
+                        <option value="Master's">Master's Degree</option>
+                        <option value="PhD">PhD</option>
+                        <option value="Certification">Certification</option>
+                    </select>
+                </div>
+                <div class="col-md-7 mb-2 mt-2">
+                    <label class="form-label small fw-bold">School/University Name <span class="text-danger">*</span></label>
+                    <input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="e.g., Oxford University" required>
+                </div>
+                <div class="col-12 mt-2">
+                    <label class="form-label small fw-bold">Upload Certificate Photo/PDF <span class="text-danger">*</span></label>
+                    <input type="file" name="edu_certificate" class="form-control form-control-sm" required>
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', template);
+}
+</script>
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}

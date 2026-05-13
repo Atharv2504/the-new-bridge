@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+    --text-dark: #333333;
+    --text-muted: #6c757d;
+    --trust-blue: #0366d6;
+    --trust-blue-hover: #0056b3;
+    --accent-light: #e1f0ff;
+    --border-color: #dee2e6;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Navbar */
+.navbar {
+    background: var(--bg-white) !important;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--trust-blue) !important;
+}
+
+.nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--trust-blue) !important;
+}
+
+/* Professional Cards */
+.glass-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--trust-blue);
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.text-muted-custom {
+    color: var(--text-muted) !important;
+}
+
+/* Buttons */
+.btn-primary-custom {
+    background: var(--trust-blue);
+    border: none;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.25rem;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+    background: var(--trust-blue-hover);
+    color: white;
+}
+
+.btn-outline-custom {
+    border: 1px solid var(--trust-blue);
+    color: var(--trust-blue);
+    background: transparent;
+    font-weight: 500;
+    border-radius: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-custom:hover, .btn-outline-custom.active {
+    background: var(--trust-blue);
+    color: white;
+}
+
+/* Badges */
+.badge-custom {
+    background: var(--accent-light);
+    color: var(--trust-blue);
+    border: 1px solid rgba(3, 102, 214, 0.2);
+    font-weight: 500;
+    padding: 0.4em 0.8em;
+    border-radius: 0.25rem;
+}
+
+.badge-verified {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    font-weight: 500;
+    padding: 0.4em 0.8em;
+    border-radius: 0.25rem;
+}
+
+/* Silent Video Ad Sidebar */
+.ad-container {
+    position: sticky;
+    top: 100px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--bg-white);
+    box-shadow: var(--shadow-sm);
+}
+
+.ad-container video {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.ad-label {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-dark);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid var(--border-color);
+}
+
+/* Progress Bars */
+.progress {
+    background-color: var(--bg-light);
+    height: 0.8rem;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.progress-bar-custom {
+    background: var(--trust-blue);
+}
+
+/* Landing Page Specific */
+.landing-hero {
+    padding: 6rem 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f8ff 100%);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.landing-section {
+    padding: 5rem 0;
+}

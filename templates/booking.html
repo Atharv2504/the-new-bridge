@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h2 style="color: var(--trust-blue);">Wisdom Market</h2>
+        <p class="text-muted-custom mb-0">Book a 30-minute 1-on-1 session with an industry veteran.</p>
+    </div>
+    
+    <!-- Sector Filters -->
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <a href="{{ url_for('booking') }}" class="btn btn-sm rounded-pill {% if not current_filter %}btn-primary-custom{% else %}btn-outline-primary{% endif %} fw-bold px-3">All Sectors</a>
+        {% for sector in sectors %}
+            <a href="{{ url_for('booking', sector=sector) }}" class="btn btn-sm rounded-pill {% if current_filter == sector %}btn-primary-custom{% else %}btn-outline-primary{% endif %} fw-bold px-3">{{ sector }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+{% if user_role == 'retiree' %}
+    <div class="alert alert-info border-0 shadow-sm rounded mb-4">
+        <i class="bi bi-info-circle-fill me-2"></i> <strong>Reverse Mentor Mode:</strong> You are viewing student profiles for reverse mentorship. Turn on Reverse Mentor mode in your dashboard to be visible here.
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    {% for retiree in retirees %}
+        <div class="col-md-6 col-lg-4">
+            <div class="glass-card h-100 d-flex flex-column bg-white border shadow-sm rounded p-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3 text-white fw-bold shadow-sm" style="width: 50px; height: 50px; background: var(--trust-blue); font-size: 1.5rem;">
+                            {{ retiree.name[0] }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">{{ retiree.name }}</h6>
+                            <small class="text-muted-custom d-block">{{ retiree.role }}</small>
+                            <div class="text-warning small mt-1 fw-bold">
+                                <i class="bi bi-star-fill"></i> {{ "%.1f"|format(retiree.avg_rating) }} 
+                                <span class="text-muted fw-normal">({{ retiree.review_count }} reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-primary border border-primary border-opacity-25">{{ retiree.sector }}</span>
+                    {% if retiree.match_percent %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                            <i class="bi bi-lightning-charge-fill me-1"></i>{{ retiree.match_percent }}% Vibe Match
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-auto pt-3 border-top text-center">
+                    {% if user_role == 'student' %}
+                        <button type="button" class="btn btn-primary-custom w-100 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#bookModal{{ retiree.id }}">
+                            <i class="bi bi-calendar-plus me-2"></i>Request Session (30m)
+                        </button>
+                    {% elif user_role == 'retiree' and retiree.role == 'Reverse Mentor' %}
+                        <button type="button" class="btn btn-outline-info w-100 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#bookModal{{ retiree.id }}">
+                            <i class="bi bi-arrow-left-right me-2"></i>Request Reverse Mentorship
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
+                            Host Mode Active
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if user_role == 'student' or (user_role == 'retiree' and retiree.role == 'Reverse Mentor') %}
+        <!-- Booking Modal for {{ retiree.name }} -->
+        <div class="modal fade" id="bookModal{{ retiree.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-light border-bottom-0">
+                        <h5 class="modal-title fw-bold text-dark">Request Session with {{ retiree.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ url_for('book_session', target_id=retiree.id) }}" method="POST">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Select Date *</label>
+                                <input type="date" name="date" class="form-control" required min="{{ current_date }}" id="date_{{ retiree.id }}" onchange="updateTimes({{ retiree.id }})">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Select 30-Minute Slot *</label>
+                                <select name="time" class="form-select" id="time_{{ retiree.id }}" required disabled>
+                                    <option value="" disabled selected>Select a date first...</option>
+                                    <optgroup label="Morning">
+                                        <option value="10:00 AM">10:00 AM - 10:30 AM</option>
+                                        <option value="10:30 AM">10:30 AM - 11:00 AM</option>
+                                        <option value="11:00 AM">11:00 AM - 11:30 AM</option>
+                                        <option value="11:30 AM">11:30 AM - 12:00 PM</option>
+                                        <option value="12:00 PM">12:00 PM - 12:30 PM</option>
+                                        <option value="12:30 PM">12:30 PM - 1:00 PM</option>
+                                    </optgroup>
+                                    <optgroup label="Afternoon">
+                                        <option value="3:00 PM">3:00 PM - 3:30 PM</option>
+                                        <option value="3:30 PM">3:30 PM - 4:00 PM</option>
+                                        <option value="4:00 PM">4:00 PM - 4:30 PM</option>
+                                        <option value="4:30 PM">4:30 PM - 5:00 PM</option>
+                                    </optgroup>
+                                </select>
+                                <div class="form-text text-danger" id="error_{{ retiree.id }}" style="display:none;">Some slots are already booked.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Topic of Doubt / Discussion *</label>
+                                <textarea name="subject" class="form-control" rows="3" placeholder="I need help understanding..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top-0 bg-light">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-custom rounded-pill fw-bold">Submit Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted-custom fs-5">No mentors available in this sector right now.</p>
+        </div>
+    {% endfor %}
+</div>
+
+{% if user_role == 'student' or user_role == 'retiree' %}
+<script>
+    // Pass booked times from backend to JS
+    const bookedData = {{ booked_times | tojson | safe }};
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('input[type="date"]').forEach(el => el.min = today);
+
+    function updateTimes(retireeId) {
+        const dateInput = document.getElementById('date_' + retireeId).value;
+        const timeSelect = document.getElementById('time_' + retireeId);
+        const errorText = document.getElementById('error_' + retireeId);
+        
+        timeSelect.disabled = false;
+        errorText.style.display = 'none';
+        
+        // Reset all options
+        Array.from(timeSelect.options).forEach(opt => {
+            if(opt.value !== "") {
+                opt.disabled = false;
+                opt.text = opt.text.replace(' (Booked)', '');
+            }
+        });
+
+        // Check booked times for this retiree
+        if (bookedData[retireeId]) {
+            let foundBooked = false;
+            bookedData[retireeId].forEach(booking => {
+                const parts = booking.split('_');
+                if (parts[0] === dateInput) {
+                    const bookedTime = parts[1];
+                    // Find option and disable it
+                    Array.from(timeSelect.options).forEach(opt => {
+                        if (opt.value === bookedTime) {
+                            opt.disabled = true;
+                            opt.text = opt.text + ' (Booked)';
+                            foundBooked = true;
+                        }
+                    });
+                }
+            });
+            if (foundBooked) {
+                errorText.style.display = 'block';
+            }
+        }
+        
+        // If current selection is now disabled, reset it
+        if(timeSelect.options[timeSelect.selectedIndex] && timeSelect.options[timeSelect.selectedIndex].disabled) {
+            timeSelect.value = "";
+        }
+    }
+</script>
+{% endif %}
+{% endblock %}
